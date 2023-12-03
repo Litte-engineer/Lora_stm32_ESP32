@@ -41,6 +41,18 @@ String hum_land2 = "";
 
 typedef struct
 {
+  uint8_t temp1;
+  uint8_t temp2;
+  uint8_t hum1;
+  uint8_t hum2:
+  uint8_t hum_land1;
+  uint8_t hum_land2;
+}Sensor;
+Sensor sensor;
+
+
+typedef struct
+{
   uint8_t send_m1;
   uint8_t send_m2;
 
@@ -148,6 +160,10 @@ void loop() {
       }
     }
 
+    sensor.temp1 = temp1.toInt();
+    sensor.hum1  = hum1.toInt();
+    sensor.humland1 = hum_land1.toInt();
+
     Firebase.setString(firebaseData, path + "/dht11_t1", temp1);
     Firebase.setString(firebaseData, path + "/dht11_h1", hum1);
     Firebase.setString(firebaseData, path + "/hum_land1", hum_land1);
@@ -190,6 +206,10 @@ void loop() {
       }
     }
 
+    sensor.temp2 = temp2.toInt();
+    sensor.hum2  = hum2.toInt();
+    sensor.humland2 = hum_land2.toInt();
+    
     Firebase.setString(firebaseData, path + "/dht11_t2", temp2);
     Firebase.setString(firebaseData, path + "/dht11_2", hum2);
     Firebase.setString(firebaseData, path + "/hum_land2", hum_land2);
@@ -208,6 +228,49 @@ void loop() {
   {
 
   }
+
+  /******** hien thi du lieu len lcd *****/
+  lcd.setCursor(0, 0);
+  lcd.print("T1:");
+  lcd.setCursor(3,0);
+  if(sensor.temp1 < 10)
+  {
+    lcd.print("0");
+    lcd.print(sensor.temp1);
+  }
+  else lcd.print(sensor.temp1);
+
+  lcd.setCursor(8, 0);
+  lcd.print("H1:");
+  lcd.setCursor(11, 0);
+  if(sensor.hum1 < 10)
+  {
+    lcd.print("0");
+    lcd.print(sensor.hum1);
+  }
+  else lcd.print(sensor.hum1);
+
+
+  lcd.setCursor(0,1);
+  lcd.print("T2:");
+  lcd.setCursor(3,1);
+  if(sensor.temp2 < 10)
+  {
+    lcd.print("0");
+    lcd.print(sensor.temp2);
+  }
+  else lcd.print(sensor.temp2);
+
+
+  lcd.setCursor(8,1)'
+  lcd.print("H2:");
+  lcd.setCursor(11, 1);
+  if(sensor.hum2 < 10)
+  {
+    lcd.print("0");
+    lcd.print(sensor.hum2);
+  }
+  else lcd.print(sensor.hum2);
 
 
 }
