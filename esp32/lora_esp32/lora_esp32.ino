@@ -44,7 +44,7 @@ typedef struct
   uint8_t temp1;
   uint8_t temp2;
   uint8_t hum1;
-  uint8_t hum2:
+  uint8_t hum2;
   uint8_t hum_land1;
   uint8_t hum_land2;
 }Sensor;
@@ -162,7 +162,7 @@ void loop() {
 
     sensor.temp1 = temp1.toInt();
     sensor.hum1  = hum1.toInt();
-    sensor.humland1 = hum_land1.toInt();
+    sensor.hum_land1 = hum_land1.toInt();
 
     Firebase.setString(firebaseData, path + "/dht11_t1", temp1);
     Firebase.setString(firebaseData, path + "/dht11_h1", hum1);
@@ -208,7 +208,7 @@ void loop() {
 
     sensor.temp2 = temp2.toInt();
     sensor.hum2  = hum2.toInt();
-    sensor.humland2 = hum_land2.toInt();
+    sensor.hum_land2 = hum_land2.toInt();
     
     Firebase.setString(firebaseData, path + "/dht11_t2", temp2);
     Firebase.setString(firebaseData, path + "/dht11_2", hum2);
@@ -262,7 +262,7 @@ void loop() {
   else lcd.print(sensor.temp2);
 
 
-  lcd.setCursor(8,1)'
+  lcd.setCursor(8,1);
   lcd.print("H2:");
   lcd.setCursor(11, 1);
   if(sensor.hum2 < 10)
