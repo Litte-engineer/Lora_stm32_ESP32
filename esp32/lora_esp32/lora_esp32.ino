@@ -11,14 +11,14 @@ String  path = "/";
 FirebaseJson json;
 LiquidCrystal_I2C lcd(0x27, 16, 2);
 
-#define FIREBASE_HOST "https://pzemt-iot-default-rtdb.firebaseio.com/"
-#define FIREBASE_AUTH "JY9IoWAjx649T8XKBYH9jJAinAmfVhbtMxkGbBRN"
+#define FIREBASE_HOST "https://lora-stm32-default-rtdb.firebaseio.com/"
+#define FIREBASE_AUTH "CqxlaviCEi2nhBMfRI2FhwyUPT65kNgFxApLaxz0"
 
 const char* ssid = "KS Chuong"; //Enter SSID
 const char* password = "0946627518"; //Enter Password
 
-//  M1t33h50,60   mach 1 : nhiet do dht 33, do am dht 50, do am dat 60
-//  M2t20h70,45   mach 2 : nhiet do dht 20, do am dht 70, do am dat 45
+//  M1cat33h50,60   mach 1 : che do auto, nhiet do dht 33, do am dht 50, do am dat 60
+//  M2cmt20h70,45   mach 2 : che do manual, nhiet do dht 20, do am dht 70, do am dat 45
 #define lora Serial2
 #define BNT1 32
 #define BNT2 35
@@ -38,6 +38,11 @@ String hum1  = "";
 String hum2  = "";
 String hum_land1 = "";
 String hum_land2 = "";
+String mode_1 = "";
+String mode_2 = "";
+
+uint32_t Time;
+uint16_t count;
 
 typedef struct
 {
@@ -47,7 +52,7 @@ typedef struct
   uint8_t hum2;
   uint8_t hum_land1;
   uint8_t hum_land2;
-}Sensor;
+} Sensor;
 Sensor sensor;
 
 
@@ -55,6 +60,12 @@ typedef struct
 {
   uint8_t send_m1;
   uint8_t send_m2;
+  uint8_t bnt1;
+  uint8_t bnt2;
+  uint8_t bnt3;
+  uint8_t bnt4;
+  uint8_t mode_1;
+  uint8_t mode_2;
 
 } Status;
 Status status;
@@ -64,6 +75,7 @@ typedef struct
   uint8_t e1;
   uint8_t e2;
   uint8_t e3;
+  uint8_t e4;
 } Read1;
 Read1 read1;
 
@@ -72,6 +84,7 @@ typedef struct
   uint8_t e1;
   uint8_t e2;
   uint8_t e3;
+  uint8_t e4;
 } Read2;
 Read2 read2;
 
@@ -103,6 +116,12 @@ void setup() {
 
 void loop() {
   // put your main code here, to run repeatedly:
+  status.bnt1 = READ_BNT1;
+  status.bnt2 = READ_BNT2;
+  status.bnt3 = READ_BNT3;
+  status.bnt4 = READ_BNT4;
+
+
   if (lora.available())
   {
     String data = lora.readString();
@@ -132,9 +151,17 @@ void loop() {
     temp1 = "";
     hum1  = "";
     hum_land1 = "";
+    mode_1 = "";
     for (int i = 0; i < data_m1.length(); i ++)
     {
-      if (data_m1[i] == 't')
+      if (data_m1[i] == 'c')
+      {
+        read1.e1 = 0;
+        read1.e2 = 0;
+        read1.e3 = 0;
+        read1.e4 = 1;
+      }
+      else if (data_m1[i] == 't')
       {
         read1.e1 = 1;
         read1.e2 = 0;
@@ -157,16 +184,19 @@ void loop() {
         if (read1.e1 == 1) temp1 += data_m1[i];
         if (read1.e2 == 1) hum1  += data_m1[i];
         if (read1.e3 == 1) hum_land1 += data_m1[i];
+        if (read1.e4 == 1) mode_1 += data_m1[i];
       }
     }
 
     sensor.temp1 = temp1.toInt();
     sensor.hum1  = hum1.toInt();
     sensor.hum_land1 = hum_land1.toInt();
+    status.mode_1    = mode_1.toInt();
 
     Firebase.setString(firebaseData, path + "/dht11_t1", temp1);
     Firebase.setString(firebaseData, path + "/dht11_h1", hum1);
     Firebase.setString(firebaseData, path + "/hum_land1", hum_land1);
+    Firebase.setString(firebaseData, path + "/MODE1", mode_1);
 
     status.send_m1 = 0 ;
   }
@@ -178,9 +208,17 @@ void loop() {
     temp2 = "";
     hum2  = "";
     hum_land2 = "";
+    mode_2  = "";
     for (int i = 0; i < data_m2.length(); i ++)
     {
-      if (data_m2[i] == 't')
+      if (data_m2[i] == 'c')
+      {
+        read2.e1 = 0;
+        read2.e2 = 0;
+        read2.e3 = 0;
+        read2.e4 = 1;
+      }
+      else if (data_m2[i] == 't')
       {
         read2.e1 = 1;
         read2.e2 = 0;
@@ -203,37 +241,52 @@ void loop() {
         if (read2.e1 == 1) temp2 += data_m2[i];
         if (read2.e2 == 1) hum2  += data_m2[i];
         if (read2.e3 == 1) hum_land2 += data_m2[i];
+        if (read2.e4 == 1) mode_2 += data_m2[i];
       }
     }
 
     sensor.temp2 = temp2.toInt();
     sensor.hum2  = hum2.toInt();
     sensor.hum_land2 = hum_land2.toInt();
-    
+    status.mode_2    = mode_2.toInt();
+
     Firebase.setString(firebaseData, path + "/dht11_t2", temp2);
     Firebase.setString(firebaseData, path + "/dht11_2", hum2);
     Firebase.setString(firebaseData, path + "/hum_land2", hum_land2);
+    Firebase.setString(firebaseData, path + "/MODE2", mode_2);
 
     status.send_m2 = 0 ;
   }
 
 
   /*********** doc du lieu tu ap ****************/
-
+  
   if (Firebase.getString(firebaseData, path + "/BOM1"))
   {
-
+    String data_b1 = firebaseData.stringData();
+    lora.println(data_b1);
+  }
+  if (Firebase.getString(firebaseData, path + "/MODE1"))
+  {
+    String data_m1 = firebaseData.stringData();
+    lora.println(data_m1);
   }
   if (Firebase.getString(firebaseData, path + "/BOM2"))
   {
-
+    String data_b2 = firebaseData.stringData();
+    lora.println(data_b2);
+  }
+  if (Firebase.getString(firebaseData, path + "/MODE2"))
+  {
+    String data_m2 = firebaseData.stringData();
+    lora.println(data_m2);
   }
 
   /******** hien thi du lieu len lcd *****/
   lcd.setCursor(0, 0);
   lcd.print("T1:");
-  lcd.setCursor(3,0);
-  if(sensor.temp1 < 10)
+  lcd.setCursor(3, 0);
+  if (sensor.temp1 < 10)
   {
     lcd.print("0");
     lcd.print(sensor.temp1);
@@ -243,7 +296,7 @@ void loop() {
   lcd.setCursor(8, 0);
   lcd.print("H1:");
   lcd.setCursor(11, 0);
-  if(sensor.hum1 < 10)
+  if (sensor.hum1 < 10)
   {
     lcd.print("0");
     lcd.print(sensor.hum1);
@@ -251,10 +304,10 @@ void loop() {
   else lcd.print(sensor.hum1);
 
 
-  lcd.setCursor(0,1);
+  lcd.setCursor(0, 1);
   lcd.print("T2:");
-  lcd.setCursor(3,1);
-  if(sensor.temp2 < 10)
+  lcd.setCursor(3, 1);
+  if (sensor.temp2 < 10)
   {
     lcd.print("0");
     lcd.print(sensor.temp2);
@@ -262,10 +315,10 @@ void loop() {
   else lcd.print(sensor.temp2);
 
 
-  lcd.setCursor(8,1);
+  lcd.setCursor(8, 1);
   lcd.print("H2:");
   lcd.setCursor(11, 1);
-  if(sensor.hum2 < 10)
+  if (sensor.hum2 < 10)
   {
     lcd.print("0");
     lcd.print(sensor.hum2);
